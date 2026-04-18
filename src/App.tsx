@@ -219,24 +219,6 @@ export default function App() {
             <CheckCircle className="w-3 h-3" />
             Live DB Connected
           </div>
-          <div className="flex bg-slate-100 p-0.5 md:p-1 rounded-lg md:rounded-xl gap-0.5 md:gap-1">
-            <button 
-              onClick={downloadXls}
-              className="flex items-center gap-1.5 text-[9px] md:text-[10px] font-black uppercase text-primary hover:bg-white px-2 md:px-3 py-1 md:py-1.5 rounded-md md:rounded-lg transition-all"
-              title="Download Excel Log"
-            >
-              <Download className="w-3 h-3" />
-              <span className="hidden xs:inline">Excel</span>
-            </button>
-            <button 
-              onClick={downloadTxt}
-              className="flex items-center gap-1.5 text-[9px] md:text-[10px] font-black uppercase text-primary hover:bg-white px-2 md:px-3 py-1 md:py-1.5 rounded-md md:rounded-lg transition-all"
-              title="Download Text Log"
-            >
-              <Download className="w-3 h-3" />
-              <span className="hidden xs:inline">Text</span>
-            </button>
-          </div>
           <div className="hidden sm:flex text-sm text-text-sub items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
             <strong className="font-mono text-text-main">3000</strong>
@@ -405,25 +387,46 @@ export default function App() {
                     </div>
                   </div>
 
-                  <div className="flex items-center bg-slate-100 p-1 rounded-xl self-start sm:self-auto border border-slate-200">
-                    <button
-                      onClick={() => setTimezone("UTC")}
-                      className={cn(
-                        "px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all",
-                        timezone === "UTC" ? "bg-white text-primary shadow-sm" : "text-text-sub hover:text-text-main"
-                      )}
-                    >
-                      UTC (Global)
-                    </button>
-                    <button
-                      onClick={() => setTimezone("IST")}
-                      className={cn(
-                        "px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all",
-                        timezone === "IST" ? "bg-white text-primary shadow-sm" : "text-text-sub hover:text-text-main"
-                      )}
-                    >
-                      IST (India)
-                    </button>
+                  <div className="flex items-center gap-2 md:gap-4">
+                    <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+                      <button 
+                        onClick={downloadXls}
+                        className="flex items-center gap-1.5 text-[10px] font-black uppercase text-primary hover:bg-white px-3 py-1.5 rounded-lg transition-all"
+                        title="Download Excel Log"
+                      >
+                        <Download className="w-3 h-3" />
+                        <span>Excel</span>
+                      </button>
+                      <button 
+                        onClick={downloadTxt}
+                        className="flex items-center gap-1.5 text-[10px] font-black uppercase text-primary hover:bg-white px-3 py-1.5 rounded-lg transition-all"
+                        title="Download Text Log"
+                      >
+                        <Download className="w-3 h-3" />
+                        <span>Text</span>
+                      </button>
+                    </div>
+
+                    <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+                      <button
+                        onClick={() => setTimezone("UTC")}
+                        className={cn(
+                          "px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all",
+                          timezone === "UTC" ? "bg-white text-primary shadow-sm" : "text-text-sub hover:text-text-main"
+                        )}
+                      >
+                        UTC
+                      </button>
+                      <button
+                        onClick={() => setTimezone("IST")}
+                        className={cn(
+                          "px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all",
+                          timezone === "IST" ? "bg-white text-primary shadow-sm" : "text-text-sub hover:text-text-main"
+                        )}
+                      >
+                        IST
+                      </button>
+                    </div>
                   </div>
                 </div>
 
