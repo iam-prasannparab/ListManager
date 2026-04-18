@@ -3,12 +3,20 @@ from models.item import Item
 import csv
 import os
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 import io
 
 item_bp = Blueprint('items', __name__)
 
 LOG_FILE = 'activity_log.csv'
+
+def format_ist(iso_string):
+    try:
+        dt = datetime.fromisoformat(iso_string)
+        ist_dt = dt + timedelta(hours=5, minutes=30)
+        return ist_dt.strftime('%Y-%m-%d'), ist_dt.strftime('%H:%M:%S')
+    except:
+        return iso_string, ""
 
 def log_to_csv(operation, item_id, title, details):
     file_exists = os.path.isfile(LOG_FILE)
@@ -46,17 +54,32 @@ def get_logs_xls():
     
     try:
         df = pd.read_csv(LOG_FILE)
+        
+        # Apply IST conversion
+        ist_data = []
+        for index, row in df.iterrows():
+            date_ist, time_ist = format_ist(row['Timestamp'])
+            ist_data.append({
+                'Date': date_ist,
+                'Time (IST)': time_ist,
+                'Operation': row['Operation'],
+                'ItemID': row['ItemID'],
+                'Title': row['Title'],
+                'Details': row['Details']
+            })
+        
+        df_ist = pd.DataFrame(ist_data)
+        
         output = io.BytesIO()
-        # Use xlwt for .xls format
         with pd.ExcelWriter(output, engine='xlwt') as writer:
-            df.to_excel(writer, index=False, sheet_name='Activity Log')
+            df_ist.to_excel(writer, index=False, sheet_name='Activity Log IST')
         output.seek(0)
         
         return send_file(
             output,
             mimetype='application/vnd.ms-excel',
             as_attachment=True,
-            download_name='activity_log.xls'
+            download_name='activity_log_ist.xls'
         )
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -68,19 +91,27 @@ def get_logs_txt():
     
     try:
         df = pd.read_csv(LOG_FILE)
-        txt_output = "SYSTEM AUDIT LOG - LIST MANAGER PRO\n"
-        txt_output += "====================================\n\n"
+        txt_output = "SYSTEM AUDIT LOG - LIST MANAGER SYSTEM (IST TIMEZONE)\n"
+        txt_output += "==================================================================================================\n"
+        txt_output += f"| {'DATE'.ljust(10)} | {'TIME (IST)'.ljust(10)} | {'OP'.ljust(8)} | {'ID'.ljust(4)} | {'TITLE'.ljust(20)} | {'DETAILS'.ljust(29)} |\n"
+        txt_output += "--------------------------------------------------------------------------------------------------\n"
         
         for index, row in df.iterrows():
-            txt_output += f"[{row['Timestamp']}] {str(row['Operation']).ljust(8)} | ID: {str(row['ItemID']).ljust(4)} | TITLE: {row['Title']}\n"
-            txt_output += f"DETAILS: {row['Details']}\n"
-            txt_output += "------------------------------------\n"
+            date_ist, time_ist = format_ist(row['Timestamp'])
+            op = str(row['Operation']).ljust(8)
+            item_id = str(row['ItemID']).ljust(4)
+            title = str(row['Title'])[:20].ljust(20)
+            details = str(row['Details'])[:29].ljust(29)
+            
+            txt_output += f"| {date_ist.ljust(10)} | {time_ist.ljust(10)} | {op} | {item_id} | {title} | {details} |\n"
+        
+        txt_output += "==================================================================================================\n"
             
         return send_file(
             io.BytesIO(txt_output.encode('utf-8')),
             mimetype='text/plain',
             as_attachment=True,
-            download_name='activity_log.txt'
+            download_name='activity_log_ist.txt'
         )
     except Exception as e:
         return jsonify({"error": str(e)}), 500

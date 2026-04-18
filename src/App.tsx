@@ -12,7 +12,8 @@ import {
   ListTodo,
   Download,
   Activity,
-  ArrowLeft
+  ArrowLeft,
+  Menu
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { clsx, type ClassValue } from "clsx";
@@ -45,6 +46,8 @@ export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [formData, setFormData] = useState({ title: "", description: "" });
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [timezone, setTimezone] = useState<"UTC" | "IST">("UTC");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -141,7 +144,7 @@ export default function App() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "activity_log.xls";
+      a.download = "activity_log_ist.xls";
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -160,13 +163,26 @@ export default function App() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "activity_log.txt";
+      a.download = "activity_log_ist.txt";
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (err) {
       setError("Failed to download text file. Please try again.");
+    }
+  };
+
+  const formatTimestamp = (ts: string) => {
+    const date = new Date(ts);
+    if (timezone === "UTC") {
+      return date.toISOString().replace('T', ' ').split('.')[0] + ' UTC';
+    } else {
+      // IST is UTC + 5:30
+      const istDate = new Date(date.getTime() + (5.5 * 60 * 60 * 1000));
+      const d = istDate.toISOString().split('T')[0];
+      const t = istDate.toISOString().split('T')[1].split('.')[0];
+      return `${d} ${t} IST`;
     }
   };
 
@@ -182,100 +198,98 @@ export default function App() {
   return (
     <div className="min-h-screen bg-bg text-text-main font-sans flex flex-col h-screen overflow-hidden">
       {/* Header */}
-      <header className="h-16 bg-white border-b border-border flex items-center justify-between px-6 shrink-0 shadow-sm relative z-10">
-        <div className="flex items-center gap-3 font-bold text-xl text-primary">
-          <ListTodo className="w-6 h-6" />
-          <span>ListManager</span>
-          <span className="text-slate-400 font-normal text-sm">v1.0.5</span>
+      <header className="h-16 bg-white border-b border-border flex items-center justify-between px-4 md:px-6 shrink-0 shadow-sm relative z-20">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setIsSidebarOpen(true)}
+            className="md:hidden p-2 hover:bg-slate-100 rounded-lg transition-colors"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+          <div className="flex items-center gap-3 font-bold text-lg md:text-xl text-primary">
+            <ListTodo className="w-5 h-5 md:w-6 h-6" />
+            <span className="hidden sm:inline">ListManagerSystem</span>
+            <span className="sm:hidden">LMS</span>
+            <span className="text-slate-400 font-normal text-xs md:text-sm">v1.0.5</span>
+          </div>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="hidden md:flex bg-emerald-50 text-emerald-800 px-3 py-1 rounded-full text-xs font-semibold border border-emerald-200 items-center gap-2">
+
+        <div className="flex items-center gap-2 md:gap-4">
+          <div className="hidden lg:flex bg-emerald-50 text-emerald-800 px-3 py-1 rounded-full text-xs font-semibold border border-emerald-200 items-center gap-2">
             <CheckCircle className="w-3 h-3" />
             Live DB Connected
           </div>
-          <div className="flex bg-slate-100 p-1 rounded-xl gap-1">
+          <div className="flex bg-slate-100 p-0.5 md:p-1 rounded-lg md:rounded-xl gap-0.5 md:gap-1">
             <button 
               onClick={downloadXls}
-              className="flex items-center gap-1.5 text-[10px] font-black uppercase text-primary hover:bg-white px-3 py-1.5 rounded-lg transition-all"
+              className="flex items-center gap-1.5 text-[9px] md:text-[10px] font-black uppercase text-primary hover:bg-white px-2 md:px-3 py-1 md:py-1.5 rounded-md md:rounded-lg transition-all"
               title="Download Excel Log"
             >
               <Download className="w-3 h-3" />
-              Excel
+              <span className="hidden xs:inline">Excel</span>
             </button>
             <button 
               onClick={downloadTxt}
-              className="flex items-center gap-1.5 text-[10px] font-black uppercase text-primary hover:bg-white px-3 py-1.5 rounded-lg transition-all"
+              className="flex items-center gap-1.5 text-[9px] md:text-[10px] font-black uppercase text-primary hover:bg-white px-2 md:px-3 py-1 md:py-1.5 rounded-md md:rounded-lg transition-all"
               title="Download Text Log"
             >
               <Download className="w-3 h-3" />
-              Text
+              <span className="hidden xs:inline">Text</span>
             </button>
           </div>
-          <div className="text-sm text-text-sub flex items-center gap-2">
+          <div className="hidden sm:flex text-sm text-text-sub items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-            Node: <strong className="font-mono text-text-main">3000</strong>
+            <strong className="font-mono text-text-main">3000</strong>
           </div>
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <nav className="w-64 bg-sidebar-bg border-r border-border flex flex-col p-6 shrink-0 overflow-y-auto shadow-[1px_0_0_0_rgba(0,0,0,0.02)]">
-          <div className="mb-8">
-            <h3 className="text-[11px] font-bold uppercase tracking-widest text-text-sub mb-4 flex items-center gap-2 opacity-60">
-              <Activity size={10} /> Operation Mode
-            </h3>
-            <div className="space-y-1.5">
-              <button 
-                onClick={() => setView("items")}
-                className={cn(
-                  "w-full flex items-center gap-3 p-2.5 rounded-xl text-sm transition-all duration-200",
-                  view === "items" 
-                    ? "bg-primary text-white font-bold shadow-lg shadow-blue-100" 
-                    : "text-text-main hover:bg-slate-50"
-                )}
+      <div className="flex flex-1 overflow-hidden relative">
+        {/* Mobile Sidebar Overlay */}
+        <AnimatePresence>
+          {isSidebarOpen && (
+            <>
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsSidebarOpen(false)}
+                className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-30 md:hidden"
+              />
+              <motion.div 
+                initial={{ x: -280 }}
+                animate={{ x: 0 }}
+                exit={{ x: -280 }}
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                className="fixed top-0 left-0 bottom-0 w-72 bg-white z-40 md:hidden shadow-2xl flex flex-col"
               >
-                <ListTodo className={cn("w-4 h-4", view === "items" ? "text-white" : "text-text-sub")} />
-                Data Repository
-              </button>
-              <button 
-                onClick={() => setView("logs")}
-                className={cn(
-                  "w-full flex items-center gap-3 p-2.5 rounded-xl text-sm transition-all duration-200",
-                  view === "logs" 
-                    ? "bg-primary text-white font-bold shadow-lg shadow-blue-100" 
-                    : "text-text-main hover:bg-slate-50"
-                )}
-              >
-                <Activity className={cn("w-4 h-4", view === "logs" ? "text-white" : "text-text-sub")} />
-                System Audit Logs
-              </button>
-            </div>
-          </div>
+                <div className="p-6 border-b border-border flex items-center justify-between">
+                  <div className="flex items-center gap-3 font-bold text-xl text-primary">
+                    <ListTodo className="w-6 h-6" />
+                    <span>LMS Admin</span>
+                  </div>
+                  <button 
+                    onClick={() => setIsSidebarOpen(false)}
+                    className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5 text-text-sub" />
+                  </button>
+                </div>
+                <div className="p-6">
+                  <SidebarContent view={view} setView={(v) => { setView(v); setIsSidebarOpen(false); }} />
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
 
-          <div className="mt-auto">
-            <h3 className="text-[11px] font-bold uppercase tracking-widest text-text-sub mb-4 opacity-60">Environment Details</h3>
-            <div className="bg-slate-50 rounded-xl p-4 border border-border">
-              <div className="font-mono text-[10px] leading-relaxed text-text-sub space-y-2">
-                <div className="flex justify-between">
-                  <span>RUNTIME</span>
-                  <span className="text-text-main font-bold">NodeJS</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>STORAGE</span>
-                  <span className="text-text-main font-bold">SQLite-3</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>ENGINE</span>
-                  <span className="text-text-main font-bold">V8_CORE</span>
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* Desktop Sidebar */}
+        <nav className="hidden md:flex w-64 bg-sidebar-bg border-r border-border flex-col p-6 shrink-0 overflow-y-auto shadow-[1px_0_0_0_rgba(0,0,0,0.02)]">
+          <SidebarContent view={view} setView={setView} />
         </nav>
 
         {/* Content Area */}
-        <main className="flex-1 p-8 overflow-y-auto bg-bg flex flex-col gap-6 relative">
+        <main className="flex-1 p-4 md:p-8 overflow-y-auto bg-bg flex flex-col gap-6 relative">
           <AnimatePresence mode="wait">
             {view === "items" ? (
               <motion.div 
@@ -285,38 +299,38 @@ export default function App() {
                 exit={{ opacity: 0, x: 10 }}
                 className="flex flex-col gap-6 h-full"
               >
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="bg-white p-6 rounded-2xl border border-border shadow-sm group hover:border-primary/50 transition-colors">
-                    <div className="text-[11px] font-bold uppercase tracking-wider text-text-sub mb-2 group-hover:text-primary transition-colors">Total Items</div>
-                    <div className="text-3xl font-black">{items.length}</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+                  <div className="bg-white p-4 md:p-6 rounded-2xl border border-border shadow-sm group hover:border-primary/50 transition-colors">
+                    <div className="text-[10px] md:text-[11px] font-bold uppercase tracking-wider text-text-sub mb-1 md:mb-2 group-hover:text-primary transition-colors">Total Items</div>
+                    <div className="text-2xl md:text-3xl font-black">{items.length}</div>
                   </div>
-                  <div className="bg-white p-6 rounded-2xl border border-border shadow-sm group hover:border-success/50 transition-colors">
-                    <div className="text-[11px] font-bold uppercase tracking-wider text-text-sub mb-2 group-hover:text-success transition-colors">Active Records</div>
-                    <div className="text-3xl font-black text-success">{items.length}</div>
+                  <div className="bg-white p-4 md:p-6 rounded-2xl border border-border shadow-sm group hover:border-success/50 transition-colors text-success">
+                    <div className="text-[10px] md:text-[11px] font-bold uppercase tracking-wider opacity-60 mb-1 md:mb-2 group-hover:opacity-100 transition-opacity">Active Records</div>
+                    <div className="text-2xl md:text-3xl font-black">{items.length}</div>
                   </div>
-                  <div className="bg-white p-6 rounded-2xl border border-border shadow-sm group hover:border-orange-500/50 transition-colors">
-                    <div className="text-[11px] font-bold uppercase tracking-wider text-text-sub mb-2 group-hover:text-orange-500 transition-colors">DB Latency</div>
-                    <div className="text-3xl font-black text-orange-500">4<span className="text-sm font-normal text-text-sub">ms</span></div>
+                  <div className="bg-white p-4 md:p-6 rounded-2xl border border-border shadow-sm group hover:border-orange-500/50 transition-colors text-orange-500">
+                    <div className="text-[10px] md:text-[11px] font-bold uppercase tracking-wider opacity-60 mb-1 md:mb-2 group-hover:opacity-100 transition-opacity">DB Latency</div>
+                    <div className="text-2xl md:text-3xl font-black">4<span className="text-xs md:text-sm font-normal opacity-60 ml-1">ms</span></div>
                   </div>
                 </div>
 
                 <div className="bg-white border border-border rounded-2xl flex-1 flex flex-col overflow-hidden shadow-sm">
-                  <div className="p-6 border-b border-border flex justify-between items-center bg-white">
+                  <div className="p-4 md:p-6 border-b border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white">
                     <div>
-                      <h2 className="text-xl font-black tracking-tight text-text-main">Data Repository</h2>
-                      <p className="text-xs text-text-sub mt-0.5">Live management of persistent system objects</p>
+                      <h2 className="text-lg md:text-xl font-black tracking-tight text-text-main">Data Repository</h2>
+                      <p className="text-[10px] md:text-xs text-text-sub mt-0.5">Live management of persistent system objects</p>
                     </div>
                     <button 
                       onClick={() => openModal()}
-                      className="bg-primary hover:bg-primary-hover text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all shadow-lg shadow-blue-100 flex items-center gap-2 active:scale-95"
+                      className="w-full sm:w-auto bg-primary hover:bg-primary-hover text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2 active:scale-95"
                     >
                       <Plus className="w-4 h-4" />
                       Add Record
                     </button>
                   </div>
 
-                  <div className="overflow-x-auto flex-1">
-                    <table className="w-full text-left border-collapse">
+                  <div className="overflow-x-auto flex-1 scrollbar-hide">
+                    <table className="w-full text-left border-collapse min-w-[600px]">
                       <thead>
                         <tr className="bg-slate-50/50 text-[10px] uppercase font-bold text-text-sub tracking-widest">
                           <th className="px-6 py-4 border-b border-border">UID</th>
@@ -358,7 +372,7 @@ export default function App() {
                                   onClick={() => deleteItem(item.id)}
                                   className="text-red-500 hover:bg-red-500/10 px-3 py-1.5 rounded-lg font-bold text-xs transition-colors"
                                 >
-                                  PURGE
+                                  DELETE
                                 </button>
                               </td>
                             </tr>
@@ -377,25 +391,50 @@ export default function App() {
                 exit={{ opacity: 0, x: -10 }}
                 className="flex flex-col gap-6 h-full"
               >
-                <div className="flex items-center gap-4">
-                  <button 
-                    onClick={() => setView("items")}
-                    className="p-2 rounded-xl border border-border hover:bg-white text-text-sub transition-all"
-                  >
-                    <ArrowLeft size={20} />
-                  </button>
-                  <div>
-                    <h2 className="text-2xl font-black tracking-tight text-text-main">System Audit Logs</h2>
-                    <p className="text-xs text-text-sub">Complete accountability trace of database transactions</p>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <button 
+                      onClick={() => setView("items")}
+                      className="p-2 rounded-xl border border-border hover:bg-white text-text-sub transition-all"
+                    >
+                      <ArrowLeft size={20} />
+                    </button>
+                    <div>
+                      <h2 className="text-2xl font-black tracking-tight text-text-main">System Audit Logs</h2>
+                      <p className="text-xs text-text-sub">Complete accountability trace of database transactions</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center bg-slate-100 p-1 rounded-xl self-start sm:self-auto border border-slate-200">
+                    <button
+                      onClick={() => setTimezone("UTC")}
+                      className={cn(
+                        "px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all",
+                        timezone === "UTC" ? "bg-white text-primary shadow-sm" : "text-text-sub hover:text-text-main"
+                      )}
+                    >
+                      UTC (Global)
+                    </button>
+                    <button
+                      onClick={() => setTimezone("IST")}
+                      className={cn(
+                        "px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all",
+                        timezone === "IST" ? "bg-white text-primary shadow-sm" : "text-text-sub hover:text-text-main"
+                      )}
+                    >
+                      IST (India)
+                    </button>
                   </div>
                 </div>
 
                 <div className="bg-white border border-border rounded-2xl flex-1 flex flex-col overflow-hidden shadow-sm">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+                  <div className="overflow-x-auto scrollbar-hide">
+                    <table className="w-full text-left border-collapse min-w-[800px]">
                       <thead>
-                        <tr className="bg-slate-50 text-[10px] uppercase font-bold text-text-sub tracking-widest">
-                          <th className="px-6 py-4 border-b border-border">UTC_Timestamp</th>
+                        <tr className="bg-slate-50 text-[10px] uppercase font-bold text-text-sub tracking-widest whitespace-nowrap">
+                          <th className="px-6 py-4 border-b border-border">
+                            {timezone === "UTC" ? "UTC_Timestamp" : "IST_Timestamp"}
+                          </th>
                           <th className="px-6 py-4 border-b border-border">Operation</th>
                           <th className="px-6 py-4 border-b border-border">Resource_ID</th>
                           <th className="px-6 py-4 border-b border-border">Record_Title</th>
@@ -417,8 +456,11 @@ export default function App() {
                         ) : (
                           [...logs].reverse().map((log, i) => (
                             <tr key={i} className="hover:bg-slate-50 transition-colors duration-75 border-b border-border/50">
-                              <td className="px-6 py-4 font-mono text-[10px] text-text-sub whitespace-nowrap">
-                                {log.timestamp}
+                              <td className={cn(
+                                "px-6 py-4 font-mono text-[10px] whitespace-nowrap",
+                                timezone === "IST" ? "text-primary font-bold" : "text-text-sub"
+                              )}>
+                                {formatTimestamp(log.timestamp)}
                               </td>
                               <td className="px-6 py-4">
                                 <span className={cn(
@@ -528,6 +570,64 @@ export default function App() {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+function SidebarContent({ view, setView }: { view: string, setView: (v: "items" | "logs") => void }) {
+  return (
+    <>
+      <div className="mb-8">
+        <h3 className="text-[11px] font-bold uppercase tracking-widest text-text-sub mb-4 flex items-center gap-2 opacity-60">
+          <Activity size={10} /> Operation Mode
+        </h3>
+        <div className="space-y-1.5">
+          <button 
+            onClick={() => setView("items")}
+            className={cn(
+              "w-full flex items-center gap-3 p-2.5 rounded-xl text-sm transition-all duration-200",
+              view === "items" 
+                ? "bg-primary text-white font-bold shadow-lg shadow-blue-100" 
+                : "text-text-main hover:bg-slate-50"
+            )}
+          >
+            <ListTodo className={cn("w-4 h-4", view === "items" ? "text-white" : "text-text-sub")} />
+            Data Repository
+          </button>
+          <button 
+            onClick={() => setView("logs")}
+            className={cn(
+              "w-full flex items-center gap-3 p-2.5 rounded-xl text-sm transition-all duration-200",
+              view === "logs" 
+                ? "bg-primary text-white font-bold shadow-lg shadow-blue-100" 
+                : "text-text-main hover:bg-slate-50"
+            )}
+          >
+            <Activity className={cn("w-4 h-4", view === "logs" ? "text-white" : "text-text-sub")} />
+            System Audit Logs
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-auto">
+        <h3 className="text-[11px] font-bold uppercase tracking-widest text-text-sub mb-4 opacity-60">Environment Details</h3>
+        <div className="bg-slate-50 rounded-xl p-4 border border-border">
+          <div className="font-mono text-[10px] leading-relaxed text-text-sub space-y-2">
+            <div className="flex justify-between">
+              <span>RUNTIME</span>
+              <span className="text-text-main font-bold">NodeJS</span>
+            </div>
+            <div className="flex justify-between">
+              <span>STORAGE</span>
+              <span className="text-text-main font-bold">SQLite-3</span>
+            </div>
+            <div className="flex justify-between">
+              <span>ENGINE</span>
+              <span className="text-text-main font-bold">V8_CORE</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
 

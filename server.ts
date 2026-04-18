@@ -12,6 +12,22 @@ if (!fs.existsSync(LOG_FILE)) {
   fs.writeFileSync(LOG_FILE, "Timestamp,Operation,ItemID,Title,Details\n");
 }
 
+function getISTDate(date: Date) {
+  // IST is UTC + 5:30
+  const istOffset = 5.5 * 60 * 60 * 1000;
+  return new Date(date.getTime() + istOffset);
+}
+
+function formatIST(isoString: string) {
+  const date = new Date(isoString);
+  const istDate = getISTDate(date);
+  
+  const d = istDate.toISOString().split('T')[0];
+  const t = istDate.toISOString().split('T')[1].split('.')[0];
+  
+  return { date: d, time: t };
+}
+
 function logToCSV(operation: string, id: string | number, title: string, details: string) {
   const timestamp = new Date().toISOString();
   // Simple CSV escape for strings containing commas
@@ -88,20 +104,32 @@ async function startServer() {
 
       const content = fs.readFileSync(LOG_FILE, 'utf-8');
       const lines = content.trim().split('\n');
-      const data = lines.map(line => {
-        // Simple CSV split (not robust for all comma cases but enough for this log)
+      
+      const formattedData = lines.map((line, index) => {
         const parts = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
-        return parts?.map(p => p.replace(/^"|"$/g, '')) || [];
+        const cleanParts = parts?.map(p => p.replace(/^"|"$/g, '')) || [];
+        
+        if (index === 0) {
+          return ["Date", "Time (IST)", "Operation", "ItemID", "Title", "Details"];
+        }
+        
+        const { date, time } = formatIST(cleanParts[0]);
+        return [date, time, cleanParts[1], cleanParts[2], cleanParts[3], cleanParts[4]];
       });
 
       const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.aoa_to_sheet(data);
-      XLSX.utils.book_append_sheet(wb, ws, "Activity Log");
+      const ws = XLSX.utils.aoa_to_sheet(formattedData);
+      
+      // Auto-size columns
+      const colWidths = [12, 12, 12, 10, 20, 40];
+      ws['!cols'] = colWidths.map(w => ({ wch: w }));
+
+      XLSX.utils.book_append_sheet(wb, ws, "Activity Log IST");
       
       const buf = XLSX.write(wb, { type: "buffer", bookType: "xls" });
       
       res.setHeader('Content-Type', 'application/vnd.ms-excel');
-      res.setHeader('Content-Disposition', 'attachment; filename=activity_log.xls');
+      res.setHeader('Content-Disposition', 'attachment; filename=activity_log_ist.xls');
       res.send(buf);
     } catch (error) {
       res.status(500).json({ error: "Failed to generate XLS" });
@@ -116,21 +144,25 @@ async function startServer() {
 
       const content = fs.readFileSync(LOG_FILE, 'utf-8');
       const lines = content.trim().split('\n');
-      let txtContent = "SYSTEM AUDIT LOG - LIST MANAGER PRO\n";
-      txtContent += "====================================\n\n";
+      
+      let txtContent = "SYSTEM AUDIT LOG - LIST MANAGER SYSTEM (IST TIMEZONE)\n";
+      txtContent += "==================================================================================================\n";
+      txtContent += `| ${"DATE".padEnd(10)} | ${"TIME (IST)".padEnd(10)} | ${"OP".padEnd(8)} | ${"ID".padEnd(4)} | ${"TITLE".padEnd(20)} | ${"DETAILS".padEnd(30)} |\n`;
+      txtContent += "--------------------------------------------------------------------------------------------------\n";
 
       lines.slice(1).forEach(line => {
         const matches = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
         if (matches) {
           const [ts, op, id, title, details] = matches.map(m => m.replace(/^"|"$/g, ''));
-          txtContent += `[${ts}] ${op.padEnd(8)} | ID: ${id.padEnd(4)} | TITLE: ${title}\n`;
-          txtContent += `DETAILS: ${details}\n`;
-          txtContent += "------------------------------------\n";
+          const { date, time } = formatIST(ts);
+          
+          txtContent += `| ${date.padEnd(10)} | ${time.padEnd(10)} | ${op.padEnd(8)} | ${id.padEnd(4)} | ${title.substring(0, 20).padEnd(20)} | ${details.substring(0, 30).padEnd(30)} |\n`;
         }
       });
+      txtContent += "==================================================================================================\n";
 
       res.setHeader('Content-Type', 'text/plain');
-      res.setHeader('Content-Disposition', 'attachment; filename=activity_log.txt');
+      res.setHeader('Content-Disposition', 'attachment; filename=activity_log_ist.txt');
       res.send(txtContent);
     } catch (error) {
       res.status(500).json({ error: "Failed to generate TXT" });
