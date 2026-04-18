@@ -1,0 +1,81 @@
+================================================================================
+            BEGINNER'S GUIDE: HOW TO EDIT THIS PROJECT (DETAILS.TXT)
+================================================================================
+
+This guide is written for anyone, even if you have NO computer programming 
+experience. Follow these steps to change the look and feel of your app easily!
+
+--------------------------------------------------------------------------------
+1. HOW TO CHANGE THE PROJECT NAME (The text at the top)
+--------------------------------------------------------------------------------
+Want to change "ListManager" to your own name?
+- Open the file: `src/App.tsx`
+- Press Ctrl + F (or Cmd + F) and search for: `ListTodo`
+- Right next to it, you will see `<span>ListManager</span>`.
+- Change `ListManager` to whatever you like (e.g., `<span>MyTaskApp</span>`).
+- Save the file, and the app will update!
+
+--------------------------------------------------------------------------------
+2. HOW TO CHANGE THE COLORS (The "Theme")
+--------------------------------------------------------------------------------
+Want a different vibe? Blue into Red or Green?
+- Open the file: `src/index.css`
+- Look at the top section labeled `@theme`.
+- You will see lines like:
+  - `--primary: #2563eb;`  <-- This is the blue color.
+  - `--primary-hover: #1d4ed8;` <-- This is the darker blue when you hover.
+- You can replace these "codes" (called Hex codes) with new ones.
+  - Red: `#ef4444`
+  - Green: `#22c55e`
+  - Purple: `#a855f7`
+- Use a website like "Google Color Picker" to find the exact code you want!
+
+--------------------------------------------------------------------------------
+3. HOW TO CHANGE THE ICONS (The little pictures)
+--------------------------------------------------------------------------------
+Don't like the "Checkmark" or "Trash can"?
+- Open the file: `src/App.tsx`
+- Search for names like `Trash2`, `Plus`, or `Activity`.
+- You can find a huge list of new names at: `https://lucide.dev/icons`
+- Just type the new name in place of the old one. 
+  (Example: Change `Trash2` to `XCircle`).
+
+--------------------------------------------------------------------------------
+4. HOW TO ADD NEW LINKS TO THE SIDEBAR
+--------------------------------------------------------------------------------
+Want to add a link to a website or a personal internal page?
+- Open the file: `src/App.tsx`
+- Look for the section that starts with `<nav class="w-64...`.
+- You will see buttons like `<button onClick={() => setView("items")}>`.
+- Copy one of those button sections, paste it below, and change the text 
+  `Data Repository` to your new name.
+
+--------------------------------------------------------------------------------
+5. HOW TO EDIT THE PYTHON CODE (For your final submission)
+--------------------------------------------------------------------------------
+If your teacher asks you to change something in the Python files:
+- Go into the folder named: `python_source`
+- All the "Rules" (called Routes) are in: `python_source/routes/item_routes.py`.
+- If you want to change the text of the Log entries, look for the word 
+  `log_to_csv` and simply change the text inside the quotes.
+
+--------------------------------------------------------------------------------
+6. HOW TO VIEW YOUR LOGS (The audit file)
+--------------------------------------------------------------------------------
+- The "Excel" and "Text" files you download are created by the server.
+- The raw data is saved in a file called `activity_log.csv` in the root folder.
+- You can open this file in Excel anytime to see every single thing you've 
+  done since the app started!
+
+--------------------------------------------------------------------------------
+7. TIPS FOR SUCCESS
+--------------------------------------------------------------------------------
+- ALWAYS make sure your text is inside quotes: `"Like This"` or `'This'`.
+- If the app breaks, just undo your last change (Ctrl + Z).
+- Don't worry about standard "Code jargon"—most of the time, you are just 
+  replacing plain English words between tags like `<span>Word Here</span>`.
+
+================================================================================
+CREATED & MAINTAINED BY PRASANN PARAB
+EMAIL: prasannparab@hotmail.com
+================================================================================

@@ -1,0 +1,24 @@
+================================================================================
+                    PROJECT SUMMARY: LISTMANAGER PRO
+================================================================================
+
+ListManager Pro is an enterprise-grade record management system designed for 
+secure data handling and high accountability.
+
+KEY FEATURES:
+- Advanced CRUD: Full management of system records.
+- Automated Auditing: Logs every database change (Create/Update/Delete).
+- Export Suite: Download activity history in Excel, Text, or CSV.
+- Modern UI: Responsive React-based dashboard with real-time feedback.
+
+TECH STACK:
+- Frontend: React 18 & Tailwind CSS.
+- Backend: Dual Node.js/Flask architecture.
+- Database: SQLite & MySQL support.
+- Infrastructure: Docker & Jenkins CI/CD integration.
+
+Ideal for administrators needing reliable, traceable database management.
+
+================================================================================
+PREPARED BY: PRASANN PARAB
+================================================================================
